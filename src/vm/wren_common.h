@@ -114,25 +114,24 @@
 #define MAX_FIELDS 255
 
 // Use the VM's allocator to allocate an object of [type].
-#define ALLOCATE(vm, type)                                                     \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
+#define ALLOCATE(vm, type) ((type*)wrenReallocate(vm, NULL, 0, sizeof(type)))
 
 // Use the VM's allocator to allocate an object of [mainType] containing a
 // flexible array of [count] objects of [arrayType].
 #define ALLOCATE_FLEX(vm, mainType, arrayType, count)                          \
-    ((mainType*)wrenReallocate(vm, NULL, 0,                                    \
-        sizeof(mainType) + sizeof(arrayType) * (count)))
+  ((mainType*)wrenReallocate(vm, NULL, 0,                                      \
+                             sizeof(mainType) + sizeof(arrayType) * (count)))
 
 // Use the VM's allocator to allocate an array of [count] elements of [type].
 #define ALLOCATE_ARRAY(vm, type, count)                                        \
-    ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * (count)))
+  ((type*)wrenReallocate(vm, NULL, 0, sizeof(type) * (count)))
 
 // Use the VM's allocator to free the previously allocated memory at [pointer].
 #define DEALLOCATE(vm, pointer) wrenReallocate(vm, pointer, 0, 0)
 
 // The Microsoft compiler does not support the "inline" modifier when compiling
 // as plain C.
-#if defined( _MSC_VER ) && !defined(__cplusplus)
+#if defined(_MSC_VER) && !defined(__cplusplus)
   #define inline _inline
 #endif
 
@@ -157,15 +156,15 @@
   #include <stdio.h>
 
   #define ASSERT(condition, message)                                           \
-      do                                                                       \
+    do                                                                         \
+    {                                                                          \
+      if (!(condition))                                                        \
       {                                                                        \
-        if (!(condition))                                                      \
-        {                                                                      \
-          fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n",               \
-              __FILE__, __LINE__, __func__, message);                          \
-          abort();                                                             \
-        }                                                                      \
-      } while (false)
+        fprintf(stderr, "[%s:%d] Assert failed in %s(): %s\n", __FILE__,       \
+                __LINE__, __func__, message);                                  \
+        abort();                                                               \
+      }                                                                        \
+    } while (false)
 
   // Indicates that we know execution should never reach this point in the
   // program. In debug mode, we assert this fact because it's a bug to get here.
@@ -175,19 +174,22 @@
   // in some cases and also lets it perform some optimizations by assuming the
   // code is never reached.
   #define UNREACHABLE()                                                        \
-      do                                                                       \
-      {                                                                        \
-        fprintf(stderr, "[%s:%d] This code should not be reached in %s()\n",   \
-            __FILE__, __LINE__, __func__);                                     \
-        abort();                                                               \
-      } while (false)
+    do                                                                         \
+    {                                                                          \
+      fprintf(stderr, "[%s:%d] This code should not be reached in %s()\n",     \
+              __FILE__, __LINE__, __func__);                                   \
+      abort();                                                                 \
+    } while (false)
 
 #else
 
-  #define ASSERT(condition, message) do { } while (false)
+  #define ASSERT(condition, message)                                           \
+    do                                                                         \
+    {                                                                          \
+    } while (false)
 
   // Tell the compiler that this part of the code will never be reached.
-  #if defined( _MSC_VER )
+  #if defined(_MSC_VER)
     #define UNREACHABLE() __assume(0)
   #elif (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
     #define UNREACHABLE() __builtin_unreachable()

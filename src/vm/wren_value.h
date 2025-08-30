@@ -46,26 +46,26 @@
 // These macros cast a Value to one of the specific object types. These do *not*
 // perform any validation, so must only be used after the Value has been
 // ensured to be the right type.
-#define AS_CLASS(value)     ((ObjClass*)AS_OBJ(value))          // ObjClass*
-#define AS_CLOSURE(value)   ((ObjClosure*)AS_OBJ(value))        // ObjClosure*
-#define AS_FIBER(v)         ((ObjFiber*)AS_OBJ(v))              // ObjFiber*
-#define AS_FN(value)        ((ObjFn*)AS_OBJ(value))             // ObjFn*
-#define AS_FOREIGN(v)       ((ObjForeign*)AS_OBJ(v))            // ObjForeign*
-#define AS_INSTANCE(value)  ((ObjInstance*)AS_OBJ(value))       // ObjInstance*
-#define AS_LIST(value)      ((ObjList*)AS_OBJ(value))           // ObjList*
-#define AS_MAP(value)       ((ObjMap*)AS_OBJ(value))            // ObjMap*
-#define AS_MODULE(value)    ((ObjModule*)AS_OBJ(value))         // ObjModule*
-#define AS_NUM(value)       (wrenValueToNum(value))             // double
-#define AS_RANGE(v)         ((ObjRange*)AS_OBJ(v))              // ObjRange*
-#define AS_STRING(v)        ((ObjString*)AS_OBJ(v))             // ObjString*
-#define AS_CSTRING(v)       (AS_STRING(v)->value)               // const char*
+#define AS_CLASS(value) ((ObjClass*)AS_OBJ(value))       // ObjClass*
+#define AS_CLOSURE(value) ((ObjClosure*)AS_OBJ(value))   // ObjClosure*
+#define AS_FIBER(v) ((ObjFiber*)AS_OBJ(v))               // ObjFiber*
+#define AS_FN(value) ((ObjFn*)AS_OBJ(value))             // ObjFn*
+#define AS_FOREIGN(v) ((ObjForeign*)AS_OBJ(v))           // ObjForeign*
+#define AS_INSTANCE(value) ((ObjInstance*)AS_OBJ(value)) // ObjInstance*
+#define AS_LIST(value) ((ObjList*)AS_OBJ(value))         // ObjList*
+#define AS_MAP(value) ((ObjMap*)AS_OBJ(value))           // ObjMap*
+#define AS_MODULE(value) ((ObjModule*)AS_OBJ(value))     // ObjModule*
+#define AS_NUM(value) (wrenValueToNum(value))            // double
+#define AS_RANGE(v) ((ObjRange*)AS_OBJ(v))               // ObjRange*
+#define AS_STRING(v) ((ObjString*)AS_OBJ(v))             // ObjString*
+#define AS_CSTRING(v) (AS_STRING(v)->value)              // const char*
 
 // These macros promote a primitive C value to a full Wren Value. There are
 // more defined below that are specific to the Nan tagged or other
 // representation.
-#define BOOL_VAL(boolean) ((boolean) ? TRUE_VAL : FALSE_VAL)    // boolean
-#define NUM_VAL(num) (wrenNumToValue(num))                      // double
-#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))           // Any Obj___*
+#define BOOL_VAL(boolean) ((boolean) ? TRUE_VAL : FALSE_VAL) // boolean
+#define NUM_VAL(num) (wrenNumToValue(num))                   // double
+#define OBJ_VAL(obj) (wrenObjectToValue((Obj*)(obj)))        // Any Obj___*
 
 // These perform type tests on a Value, returning `true` if the Value is of the
 // given type.
@@ -84,10 +84,12 @@
 // Creates a new string object from [text], which should be a bare C string
 // literal. This determines the length of the string automatically at compile
 // time based on the size of the character array (-1 for the terminating '\0').
-#define CONST_STRING(vm, text) wrenNewStringLength((vm), (text), sizeof(text) - 1)
+#define CONST_STRING(vm, text)                                                 \
+  wrenNewStringLength((vm), (text), sizeof(text) - 1)
 
 // Identifies which specific type a heap-allocated object is.
-typedef enum {
+typedef enum
+{
   OBJ_CLASS,
   OBJ_CLOSURE,
   OBJ_FIBER,
@@ -247,19 +249,19 @@ typedef struct
 typedef struct
 {
   Obj obj;
-  
+
   ByteBuffer code;
   ValueBuffer constants;
-  
+
   // The module where this function was defined.
   ObjModule* module;
 
   // The maximum number of stack slots this function may use.
   int maxSlots;
-  
+
   // The number of upvalues this function closes over.
   int numUpvalues;
-  
+
   // The number of parameters this function expects. Used to ensure that .call
   // handles a mismatch between number of parameters and arguments. This will
   // only be set for fns, and not ObjFns that represent methods or scripts.
@@ -285,10 +287,10 @@ typedef struct
   // Pointer to the current (really next-to-be-executed) instruction in the
   // function's bytecode.
   uint8_t* ip;
-  
+
   // The closure being executed.
   ObjClosure* closure;
-  
+
   // Pointer to the first stack slot used by this call frame. This will contain
   // the receiver, followed by the function's parameters, then local variables
   // and temporaries.
@@ -301,11 +303,11 @@ typedef enum
 {
   // The fiber is being run from another fiber using a call to `try()`.
   FIBER_TRY,
-  
+
   // The fiber was directly invoked by `runInterpreter()`. This means it's the
   // initial fiber used by a call to `wrenCall()` or `wrenInterpret()`.
   FIBER_ROOT,
-  
+
   // The fiber is invoked some other way. If [caller] is `NULL` then the fiber
   // was invoked using `call()`. If [numFrames] is zero, then the fiber has
   // finished running and is done. If [numFrames] is one and that frame's `ip`
@@ -316,41 +318,41 @@ typedef enum
 typedef struct sObjFiber
 {
   Obj obj;
-  
+
   // The stack of value slots. This is used for holding local variables and
   // temporaries while the fiber is executing. It is heap-allocated and grown
   // as needed.
   Value* stack;
-  
+
   // A pointer to one past the top-most value on the stack.
   Value* stackTop;
-  
+
   // The number of allocated slots in the stack array.
   int stackCapacity;
-  
+
   // The stack of call frames. This is a dynamic array that grows as needed but
   // never shrinks.
   CallFrame* frames;
-  
+
   // The number of frames currently in use in [frames].
   int numFrames;
-  
+
   // The number of [frames] allocated.
   int frameCapacity;
-  
+
   // Pointer to the first node in the linked list of open upvalues that are
   // pointing to values still on the stack. The head of the list will be the
   // upvalue closest to the top of the stack, and then the list works downwards.
   ObjUpvalue* openUpvalues;
-  
+
   // The fiber that ran this one. If this fiber is yielded, control will resume
   // to this one. May be `NULL`.
   struct sObjFiber* caller;
-  
+
   // If the fiber failed because of a runtime error, this will contain the
   // error object. Otherwise, it will be null.
   Value error;
-  
+
   FiberState state;
 } ObjFiber;
 
@@ -368,7 +370,7 @@ typedef enum
 
   // A normal user-defined method.
   METHOD_BLOCK,
-  
+
   // No method for the given symbol.
   METHOD_NONE
 } MethodType;
@@ -410,7 +412,7 @@ struct sObjClass
 
   // The name of the class.
   ObjString* name;
-  
+
   // The ClassAttribute for the class, if any
   Value attributes;
 };
@@ -549,71 +551,71 @@ typedef struct
 // means math on numbers is fast.
 #if WREN_NAN_TAGGING
 
-// A mask that selects the sign bit.
-#define SIGN_BIT ((uint64_t)1 << 63)
+  // A mask that selects the sign bit.
+  #define SIGN_BIT ((uint64_t)1 << 63)
 
-// The bits that must be set to indicate a quiet NaN.
-#define QNAN ((uint64_t)0x7ffc000000000000)
+  // The bits that must be set to indicate a quiet NaN.
+  #define QNAN ((uint64_t)0x7ffc000000000000)
 
-// If the NaN bits are set, it's not a number.
-#define IS_NUM(value) (((value) & QNAN) != QNAN)
+  // If the NaN bits are set, it's not a number.
+  #define IS_NUM(value) (((value) & QNAN) != QNAN)
 
-// An object pointer is a NaN with a set sign bit.
-#define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
+  // An object pointer is a NaN with a set sign bit.
+  #define IS_OBJ(value) (((value) & (QNAN | SIGN_BIT)) == (QNAN | SIGN_BIT))
 
-#define IS_FALSE(value)     ((value) == FALSE_VAL)
-#define IS_NULL(value)      ((value) == NULL_VAL)
-#define IS_UNDEFINED(value) ((value) == UNDEFINED_VAL)
+  #define IS_FALSE(value) ((value) == FALSE_VAL)
+  #define IS_NULL(value) ((value) == NULL_VAL)
+  #define IS_UNDEFINED(value) ((value) == UNDEFINED_VAL)
 
-// Masks out the tag bits used to identify the singleton value.
-#define MASK_TAG (7)
+  // Masks out the tag bits used to identify the singleton value.
+  #define MASK_TAG (7)
 
-// Tag values for the different singleton values.
-#define TAG_NAN       (0)
-#define TAG_NULL      (1)
-#define TAG_FALSE     (2)
-#define TAG_TRUE      (3)
-#define TAG_UNDEFINED (4)
-#define TAG_UNUSED2   (5)
-#define TAG_UNUSED3   (6)
-#define TAG_UNUSED4   (7)
+  // Tag values for the different singleton values.
+  #define TAG_NAN (0)
+  #define TAG_NULL (1)
+  #define TAG_FALSE (2)
+  #define TAG_TRUE (3)
+  #define TAG_UNDEFINED (4)
+  #define TAG_UNUSED2 (5)
+  #define TAG_UNUSED3 (6)
+  #define TAG_UNUSED4 (7)
 
-// Value -> 0 or 1.
-#define AS_BOOL(value) ((value) == TRUE_VAL)
+  // Value -> 0 or 1.
+  #define AS_BOOL(value) ((value) == TRUE_VAL)
 
-// Value -> Obj*.
-#define AS_OBJ(value) ((Obj*)(uintptr_t)((value) & ~(SIGN_BIT | QNAN)))
+  // Value -> Obj*.
+  #define AS_OBJ(value) ((Obj*)(uintptr_t)((value) & ~(SIGN_BIT | QNAN)))
 
-// Singleton values.
-#define NULL_VAL      ((Value)(uint64_t)(QNAN | TAG_NULL))
-#define FALSE_VAL     ((Value)(uint64_t)(QNAN | TAG_FALSE))
-#define TRUE_VAL      ((Value)(uint64_t)(QNAN | TAG_TRUE))
-#define UNDEFINED_VAL ((Value)(uint64_t)(QNAN | TAG_UNDEFINED))
+  // Singleton values.
+  #define NULL_VAL ((Value)(uint64_t)(QNAN | TAG_NULL))
+  #define FALSE_VAL ((Value)(uint64_t)(QNAN | TAG_FALSE))
+  #define TRUE_VAL ((Value)(uint64_t)(QNAN | TAG_TRUE))
+  #define UNDEFINED_VAL ((Value)(uint64_t)(QNAN | TAG_UNDEFINED))
 
-// Gets the singleton type tag for a Value (which must be a singleton).
-#define GET_TAG(value) ((int)((value) & MASK_TAG))
+  // Gets the singleton type tag for a Value (which must be a singleton).
+  #define GET_TAG(value) ((int)((value) & MASK_TAG))
 
 #else
 
-// Value -> 0 or 1.
-#define AS_BOOL(value) ((value).type == VAL_TRUE)
+  // Value -> 0 or 1.
+  #define AS_BOOL(value) ((value).type == VAL_TRUE)
 
-// Value -> Obj*.
-#define AS_OBJ(v) ((v).as.obj)
+  // Value -> Obj*.
+  #define AS_OBJ(v) ((v).as.obj)
 
-// Determines if [value] is a garbage-collected object or not.
-#define IS_OBJ(value) ((value).type == VAL_OBJ)
+  // Determines if [value] is a garbage-collected object or not.
+  #define IS_OBJ(value) ((value).type == VAL_OBJ)
 
-#define IS_FALSE(value)     ((value).type == VAL_FALSE)
-#define IS_NULL(value)      ((value).type == VAL_NULL)
-#define IS_NUM(value)       ((value).type == VAL_NUM)
-#define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
+  #define IS_FALSE(value) ((value).type == VAL_FALSE)
+  #define IS_NULL(value) ((value).type == VAL_NULL)
+  #define IS_NUM(value) ((value).type == VAL_NUM)
+  #define IS_UNDEFINED(value) ((value).type == VAL_UNDEFINED)
 
-// Singleton values.
-#define FALSE_VAL     ((Value){ VAL_FALSE, { 0 } })
-#define NULL_VAL      ((Value){ VAL_NULL, { 0 } })
-#define TRUE_VAL      ((Value){ VAL_TRUE, { 0 } })
-#define UNDEFINED_VAL ((Value){ VAL_UNDEFINED, { 0 } })
+  // Singleton values.
+  #define FALSE_VAL ((Value){VAL_FALSE, {0}})
+  #define NULL_VAL ((Value){VAL_NULL, {0}})
+  #define TRUE_VAL ((Value){VAL_TRUE, {0}})
+  #define UNDEFINED_VAL ((Value){VAL_UNDEFINED, {0}})
 
 #endif
 
@@ -647,7 +649,7 @@ static inline void wrenAppendCallFrame(WrenVM* vm, ObjFiber* fiber,
 {
   // The caller should have ensured we already have enough capacity.
   ASSERT(fiber->frameCapacity > fiber->numFrames, "No memory for call frame.");
-  
+
   CallFrame* frame = &fiber->frames[fiber->numFrames++];
   frame->stackStart = stackStart;
   frame->closure = closure;
@@ -690,8 +692,9 @@ int wrenListIndexOf(WrenVM* vm, ObjList* list, Value value);
 ObjMap* wrenNewMap(WrenVM* vm);
 
 // Validates that [arg] is a valid object for use as a map key. Returns true if
-// it is and returns false otherwise. Use validateKey usually, for a runtime error.
-// This separation exists to aid the API in surfacing errors to the developer as well.
+// it is and returns false otherwise. Use validateKey usually, for a runtime
+// error. This separation exists to aid the API in surfacing errors to the
+// developer as well.
 static inline bool wrenMapIsValidKey(Value arg);
 
 // Looks up [key] in [map]. If found, returns the value. Otherwise, returns
@@ -761,8 +764,8 @@ uint32_t wrenStringFind(ObjString* haystack, ObjString* needle,
                         uint32_t startIndex);
 
 // Returns true if [a] and [b] represent the same string.
-static inline bool wrenStringEqualsCString(const ObjString* a,
-                                           const char* b, size_t length)
+static inline bool wrenStringEqualsCString(const ObjString* a, const char* b,
+                                           size_t length)
 {
   return a->length == length && memcmp(a->value, b, length) == 0;
 }
@@ -807,8 +810,10 @@ static inline bool wrenValuesSame(Value a, Value b)
   // by identity (i.e. pointer), so all we need to do is compare the bits.
   return a == b;
 #else
-  if (a.type != b.type) return false;
-  if (a.type == VAL_NUM) return a.as.num == b.as.num;
+  if (a.type != b.type)
+    return false;
+  if (a.type == VAL_NUM)
+    return a.as.num == b.as.num;
   return a.as.obj == b.as.obj;
 #endif
 }
@@ -879,12 +884,8 @@ static inline Value wrenNumToValue(double num)
 
 static inline bool wrenMapIsValidKey(Value arg)
 {
-  return IS_BOOL(arg)
-      || IS_CLASS(arg)
-      || IS_NULL(arg)
-      || IS_NUM(arg)
-      || IS_RANGE(arg)
-      || IS_STRING(arg);
+  return IS_BOOL(arg) || IS_CLASS(arg) || IS_NULL(arg) || IS_NUM(arg) ||
+         IS_RANGE(arg) || IS_STRING(arg);
 }
 
 #endif

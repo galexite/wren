@@ -2,13 +2,13 @@
 
 #if WREN_OPT_RANDOM
 
-#include <string.h>
-#include <time.h>
+  #include <string.h>
+  #include <time.h>
 
-#include "wren.h"
-#include "wren_vm.h"
+  #include "wren.h"
+  #include "wren_vm.h"
 
-#include "wren_opt_random.wren.inc"
+  #include "wren_opt_random.wren.inc"
 
 // Implements the well equidistributed long-period linear PRNG (WELL512a).
 //
@@ -25,7 +25,7 @@ static uint32_t advanceState(Well512* well)
   uint32_t a, b, c, d;
   a = well->state[well->index];
   c = well->state[(well->index + 13) & 15];
-  b =  a ^ c ^ (a << 16) ^ (c << 15);
+  b = a ^ c ^ (a << 16) ^ (c << 15);
   c = well->state[(well->index + 9) & 15];
   c ^= (c >> 11);
   a = well->state[well->index] = b ^ c;
@@ -124,19 +124,24 @@ WrenForeignMethodFn wrenRandomBindForeignMethod(WrenVM* vm,
                                                 const char* signature)
 {
   ASSERT(strcmp(className, "Random") == 0, "Should be in Random class.");
-  
-  if (strcmp(signature, "<allocate>") == 0) return randomAllocate;
-  if (strcmp(signature, "seed_()") == 0) return randomSeed0;
-  if (strcmp(signature, "seed_(_)") == 0) return randomSeed1;
-  
+
+  if (strcmp(signature, "<allocate>") == 0)
+    return randomAllocate;
+  if (strcmp(signature, "seed_()") == 0)
+    return randomSeed0;
+  if (strcmp(signature, "seed_(_)") == 0)
+    return randomSeed1;
+
   if (strcmp(signature, "seed_(_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_)") == 0)
   {
     return randomSeed16;
   }
-  
-  if (strcmp(signature, "float()") == 0) return randomFloat;
-  if (strcmp(signature, "int()") == 0) return randomInt0;
-  
+
+  if (strcmp(signature, "float()") == 0)
+    return randomFloat;
+  if (strcmp(signature, "int()") == 0)
+    return randomInt0;
+
   ASSERT(false, "Unknown method.");
   return NULL;
 }

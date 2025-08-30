@@ -3,8 +3,8 @@
 
 #include "wren_common.h"
 #include "wren_compiler.h"
-#include "wren_value.h"
 #include "wren_utils.h"
+#include "wren_value.h"
 
 // The maximum number of temporary objects that can be made visible to the GC
 // at one time.
@@ -12,9 +12,9 @@
 
 typedef enum
 {
-  #define OPCODE(name, _) CODE_##name,
-  #include "wren_opcodes.h"
-  #undef OPCODE
+#define OPCODE(name, _) CODE_##name,
+#include "wren_opcodes.h"
+#undef OPCODE
 } Code;
 
 // A handle to a value, basically just a linked list of extra GC roots.
@@ -49,7 +49,7 @@ struct WrenVM
   // whose key is null) for the module's name and the value is the ObjModule
   // for the module.
   ObjMap* modules;
-  
+
   // The most recently imported module. More specifically, the module whose
   // code has most recently finished executing.
   //
@@ -85,11 +85,11 @@ struct WrenVM
   Obj* tempRoots[WREN_MAX_TEMP_ROOTS];
 
   int numTempRoots;
-  
+
   // Pointer to the first node in the linked list of active handles or NULL if
   // there are none.
   WrenHandle* handles;
-  
+
   // Pointer to the bottom of the range of stack slots available for use from
   // the C API. During a foreign method, this will be in the stack of the fiber
   // that is executing a method.
@@ -100,7 +100,7 @@ struct WrenVM
   Value* apiStack;
 
   WrenConfiguration config;
-  
+
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap
@@ -182,16 +182,17 @@ static inline void wrenCallFunction(WrenVM* vm, ObjFiber* fiber,
   if (fiber->numFrames + 1 > fiber->frameCapacity)
   {
     int max = fiber->frameCapacity * 2;
-    fiber->frames = (CallFrame*)wrenReallocate(vm, fiber->frames,
-        sizeof(CallFrame) * fiber->frameCapacity, sizeof(CallFrame) * max);
+    fiber->frames = (CallFrame*)wrenReallocate(
+        vm, fiber->frames, sizeof(CallFrame) * fiber->frameCapacity,
+        sizeof(CallFrame) * max);
     fiber->frameCapacity = max;
   }
-  
+
   // Grow the stack if needed.
   int stackSize = (int)(fiber->stackTop - fiber->stack);
   int needed = stackSize + closure->fn->maxSlots;
   wrenEnsureStack(vm, fiber, needed);
-  
+
   wrenAppendCallFrame(vm, fiber, closure, fiber->stackTop - numArgs);
 }
 
@@ -208,27 +209,44 @@ void wrenPopRoot(WrenVM* vm);
 // header doesn't have a full definitely of WrenVM yet.
 static inline ObjClass* wrenGetClassInline(WrenVM* vm, Value value)
 {
-  if (IS_NUM(value)) return vm->numClass;
-  if (IS_OBJ(value)) return AS_OBJ(value)->classObj;
+  if (IS_NUM(value))
+    return vm->numClass;
+  if (IS_OBJ(value))
+    return AS_OBJ(value)->classObj;
 
 #if WREN_NAN_TAGGING
   switch (GET_TAG(value))
   {
-    case TAG_FALSE:     return vm->boolClass; break;
-    case TAG_NAN:       return vm->numClass; break;
-    case TAG_NULL:      return vm->nullClass; break;
-    case TAG_TRUE:      return vm->boolClass; break;
-    case TAG_UNDEFINED: UNREACHABLE();
+  case TAG_FALSE:
+    return vm->boolClass;
+    break;
+  case TAG_NAN:
+    return vm->numClass;
+    break;
+  case TAG_NULL:
+    return vm->nullClass;
+    break;
+  case TAG_TRUE:
+    return vm->boolClass;
+    break;
+  case TAG_UNDEFINED:
+    UNREACHABLE();
   }
 #else
   switch (value.type)
   {
-    case VAL_FALSE:     return vm->boolClass;
-    case VAL_NULL:      return vm->nullClass;
-    case VAL_NUM:       return vm->numClass;
-    case VAL_TRUE:      return vm->boolClass;
-    case VAL_OBJ:       return AS_OBJ(value)->classObj;
-    case VAL_UNDEFINED: UNREACHABLE();
+  case VAL_FALSE:
+    return vm->boolClass;
+  case VAL_NULL:
+    return vm->nullClass;
+  case VAL_NUM:
+    return vm->numClass;
+  case VAL_TRUE:
+    return vm->boolClass;
+  case VAL_OBJ:
+    return AS_OBJ(value)->classObj;
+  case VAL_UNDEFINED:
+    UNREACHABLE();
   }
 #endif
 
