@@ -1,12 +1,10 @@
-# Build outputs
-/bin
-/lib
 # Intermediate files
 *.obj
 Debug/
 Release/
 /build
 /.sass-cache
+/.cache
 *.pyc
 
 # I leave a temporary Wren script at the top
